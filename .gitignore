@@ -1,0 +1,9 @@
+.build/
+.swiftpm/
+*.xcodeproj/
+xcuserdata/
+DerivedData/
+.DS_Store
+*.xcworkspace
+icon_1024.png
+generate_icon.py

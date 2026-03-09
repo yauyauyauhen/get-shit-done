@@ -1,0 +1,31 @@
+name: GetShitDone
+options:
+  bundleIdPrefix: com.getshitdone
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "15.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+
+targets:
+  GetShitDone:
+    type: application
+    platform: macOS
+    sources:
+      - GetShitDone
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.getshitdone.app
+        PRODUCT_NAME: Get Shit Done
+        INFOPLIST_FILE: GetShitDone/Info.plist
+        CODE_SIGN_ENTITLEMENTS: GetShitDone/GetShitDone.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        COMBINE_HIDPI_IMAGES: true
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        ENABLE_HARDENED_RUNTIME: true
+        CODE_SIGN_IDENTITY: "-"
+        SWIFT_EMIT_LOC_STRINGS: true
