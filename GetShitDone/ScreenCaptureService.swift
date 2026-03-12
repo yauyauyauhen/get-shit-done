@@ -34,11 +34,8 @@ final class ScreenCaptureService {
         CGRequestScreenCaptureAccess()
     }
 
-    /// Capture the main display and return JPEG data (no disk writes)
+    /// Capture the display with the focused window and return JPEG data (no disk writes)
     func captureScreen() async throws -> Data {
-        // Don't gate on CGPreflightScreenCaptureAccess — it's unreliable after restarts.
-        // Just attempt the capture; ScreenCaptureKit will throw if permission is missing.
-
         let cgImage: CGImage
 
         if #available(macOS 14.0, *) {
@@ -47,7 +44,6 @@ final class ScreenCaptureService {
             cgImage = try await captureWithStream()
         }
 
-        // Convert to JPEG with moderate compression to reduce API payload size
         guard let jpegData = jpegData(from: cgImage, quality: 0.8) else {
             throw ScreenCaptureError.conversionFailed
         }
@@ -55,13 +51,22 @@ final class ScreenCaptureService {
         return jpegData
     }
 
+    /// Find the display containing the currently focused window
+    private func activeDisplayID() -> CGDirectDisplayID {
+        if let screen = NSScreen.main, let id = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID {
+            return id
+        }
+        return CGMainDisplayID()
+    }
+
     // MARK: - macOS 14+ (SCScreenshotManager)
 
     @available(macOS 14.0, *)
     private func captureWithScreenshotManager() async throws -> CGImage {
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+        let targetID = activeDisplayID()
 
-        guard let display = content.displays.first else {
+        guard let display = content.displays.first(where: { $0.displayID == targetID }) ?? content.displays.first else {
             throw ScreenCaptureError.noDisplay
         }
 
@@ -93,8 +98,9 @@ final class ScreenCaptureService {
 
     private func captureWithStream() async throws -> CGImage {
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+        let targetID = activeDisplayID()
 
-        guard let display = content.displays.first else {
+        guard let display = content.displays.first(where: { $0.displayID == targetID }) ?? content.displays.first else {
             throw ScreenCaptureError.noDisplay
         }
 
